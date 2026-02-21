@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Kullanıcı giriş yapmış mı?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Yönetici mi?
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Kullanıcı koleksiyonu — herkes kendi kaydını okuyabilir, admin hepsini görebilir
+    match /users/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+      // İlk kayıt: kullanıcı kendi belgesini oluşturabilir
+      allow create: if isAuth() && request.auth.uid == userId;
+    }
+
+    // Ayarlar — herkes okuyabilir, admin yazabilir
+    match /settings/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // Kıdemler — herkes okuyabilir, admin yazabilir
+    match /seniorities/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // Çalışanlar — giriş yapmış herkes okuyabilir, admin yazabilir
+    match /employees/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // Hizmetler — giriş yapmış herkes okuyabilir, admin yazabilir
+    match /services/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // İşler — giriş yapmış herkes okuyabilir, admin yazabilir
+    match /jobs/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+  }
+}
