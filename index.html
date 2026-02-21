@@ -1641,19 +1641,18 @@ async function runAI(type) {
   const dataSummary = buildDataSummary();
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
         system: prompt.instruction,
-        messages: [{ role: 'user', content: dataSummary }]
+        userMessage: dataSummary
       })
     });
 
     const data = await response.json();
-    const text = data.content?.map(c => c.text || '').join('') || 'Yanıt alınamadı.';
+    if (data.error) throw new Error(data.error);
+    const text = data.text || 'Yanıt alınamadı.';
 
     // Format text: bold headers, line breaks
     const formatted = text
