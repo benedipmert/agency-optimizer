@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#fafaf9">
+<title>Ajans Optimizör</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafaf9;--surface:#fff;--bg2:#f4f2ef;--surface2:#f0ede9;--surface3:#e8e4de;
+  --border:#ebe8e3;--border2:#dcd8d1;
+  --text:#18160f;--text2:#7a746a;--text3:#b3aca2;
+  --sw:#3b6ef5;--sw-s:#eef2fe;--sw-b:#adc2fb;
+  --cr:#8b5cf6;--cr-s:#f3f0fd;--cr-b:#c4b5fd;
+  --pm:#0d9e6e;--pm-s:#edfaf4;--pm-b:#6ee7b7;
+  --green:#0d9e6e;--green-s:#edfaf4;--green-b:#6ee7b7;
+  --amber:#d08000;--amber-s:#fef6e4;--amber-b:#fcd34d;
+  --red:#d63a3a;--red-s:#fdf0f0;--red-b:#fca5a5;
+  --r:12px;--rsm:8px;--rlg:18px;
+  --sh:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04);
+  --shlg:0 4px 24px rgba(0,0,0,.08);
+  --f:'Plus Jakarta Sans',-apple-system,sans-serif;
+  --nav:66px;--safe:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;line-height:1.5;min-height:100dvh;-webkit-font-smoothing:antialiased;}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);padding:20px;}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:36px 32px;width:100%;max-width:380px;box-shadow:var(--shlg);}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.auth-logo-icon{width:38px;height:38px;border-radius:11px;background:var(--sw);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;}
+.auth-logo h1{font-size:1rem;font-weight:700;}
+.auth-logo p{font-size:.7rem;color:var(--text3);}
+.auth-title{font-size:1.2rem;font-weight:700;margin-bottom:4px;letter-spacing:-.02em;}
+.auth-sub{font-size:.8rem;color:var(--text2);margin-bottom:24px;}
+.auth-err{background:var(--red-s);border:1px solid var(--red-b);border-radius:var(--rsm);padding:10px 12px;font-size:.78rem;color:var(--red);margin-bottom:14px;display:none;}
+.auth-err.show{display:block;}
+
+/* ── SHELL ── */
+#app-screen{display:none;}
+.shell{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;border-radius:10px;background:var(--sw);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
+.logo-text h1{font-size:.88rem;font-weight:700;letter-spacing:-.01em;}
+.logo-text p{font-size:.65rem;color:var(--text3);margin-top:1px;}
+.nav{padding:10px 10px;flex:1;}
+.nav-section{padding:10px 10px 4px;font-size:.62rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rsm);cursor:pointer;color:var(--text2);font-size:.8rem;font-weight:500;transition:all .1s;margin-bottom:1px;}
+.nav-item:hover{background:var(--bg2);color:var(--text);}
+.nav-item.active{background:var(--sw-s);color:var(--sw);}
+.nav-item .ico{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;}
+.nav-item.active .ico{background:#fff;}
+.nav-bottom{padding:12px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rsm);background:var(--bg2);}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--sw);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-email{font-size:.7rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-role{font-size:.6rem;color:var(--text3);}
+.btn-signout{font-size:.7rem;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px;} .btn-signout:hover{color:var(--red);}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.page{display:none;padding:28px 28px;max-width:1100px;}
+.page.active{display:block;}
+.ph{margin-bottom:22px;}
+.ph h2{font-size:1.4rem;font-weight:700;letter-spacing:-.02em;}
+.ph p{color:var(--text2);font-size:.8rem;margin-top:3px;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:18px 20px;margin-bottom:12px;box-shadow:var(--sh);}
+.card-title{font-size:.84rem;font-weight:600;margin-bottom:14px;}
+.card-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-row .card-title{margin-bottom:0;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+
+/* ── STAT ── */
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:15px 16px;box-shadow:var(--sh);}
+.stat .sl{font-size:.62rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.stat .sv{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;line-height:1;}
+.stat .ss{font-size:.7rem;color:var(--text2);margin-top:3px;}
+
+/* ── DEPT CARD ── */
+.dept-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:16px 18px;box-shadow:var(--sh);}
+.dept-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.dept-name{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.84rem;}
+.dd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dd.sw{background:var(--sw);}.dd.cr{background:var(--cr);}.dd.pm{background:var(--pm);}
+
+/* ── PROGRESS ── */
+.prog-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);margin-bottom:6px;}
+.prog-track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.psw{background:var(--sw);}.pcr{background:var(--cr);}.ppm{background:var(--pm);}
+.pwarn{background:var(--amber);}.pfull{background:var(--red);}
+.prog-sub{font-size:.7rem;color:var(--text2);margin-top:7px;}
+
+/* ── FORMS ── */
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px;}
+.fg label{font-size:.7rem;font-weight:600;color:var(--text2);}
+.fg input,.fg select{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rsm);padding:9px 12px;color:var(--text);font-family:var(--f);font-size:.84rem;font-weight:500;outline:none;transition:border-color .12s,box-shadow .12s;width:100%;-webkit-appearance:none;}
+.fg input::placeholder{color:var(--text3);font-weight:400;}
+.fg input:focus,.fg select:focus{border-color:var(--sw);box-shadow:0 0 0 3px rgba(59,110,245,.1);background:var(--surface);}
+.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b3aca2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--rsm);border:none;cursor:pointer;font-family:var(--f);font-size:.82rem;font-weight:600;transition:all .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.bp{background:var(--sw);color:#fff;} .bp:hover{background:#2d5be3;} .bp:active{transform:scale(.97);}
+.bg{background:transparent;border:1.5px solid var(--border2);color:var(--text2);padding:6px 10px;font-size:.74rem;}
+.bg:hover{border-color:var(--red);color:var(--red);}
+.bsm{padding:6px 12px;font-size:.76rem;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:.66rem;font-weight:600;white-space:nowrap;}
+.bsw{background:var(--sw-s);color:var(--sw);}
+.bcr{background:var(--cr-s);color:var(--cr);}
+.bpm{background:var(--pm-s);color:var(--pm);}
+.bok{background:var(--green-s);color:var(--green);}
+.bwarn{background:var(--amber-s);color:var(--amber);}
+.bfull{background:var(--red-s);color:var(--red);}
+.bneu{background:var(--bg2);color:var(--text2);}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+thead tr{border-bottom:1.5px solid var(--border);}
+th{text-align:left;padding:0 11px 9px;font-size:.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+td{padding:10px 11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--bg);}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:var(--r);margin-bottom:16px;width:fit-content;}
+.tab{padding:7px 16px;border-radius:8px;border:none;font-family:var(--f);font-size:.78rem;font-weight:600;cursor:pointer;color:var(--text2);background:transparent;transition:all .12s;}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh);}
+
+/* ── OPP CARD ── */
+.ocard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rlg);padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:box-shadow .15s;}
+.ocard:hover{box-shadow:var(--shlg);}
+.ocard-accent{position:absolute;left:0;top:0;bottom:0;width:3.5px;border-radius:99px 0 0 99px;}
+.ocard-rank{position:absolute;right:16px;top:14px;font-size:1.5rem;font-weight:800;color:var(--bg2);letter-spacing:-.04em;}
+.ocard-name{font-weight:700;font-size:.9rem;margin-bottom:4px;}
+.om-grid{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;}
+.om-item .om-l{font-size:.62rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.om-item .om-v{font-size:.84rem;font-weight:600;margin-top:2px;}
+.sbar{height:3px;background:var(--bg2);border-radius:99px;margin-top:14px;overflow:hidden;}
+.sfill{height:100%;background:linear-gradient(90deg,var(--pm),var(--sw));border-radius:99px;}
+
+/* ── SECTOR CARD ── */
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--sh);}
+.sec-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.sec-info{flex:1;min-width:0;}
+.sec-name{font-weight:600;font-size:.84rem;}
+.sec-sub{font-size:.72rem;color:var(--text2);margin-top:2px;}
+.sec-val{font-weight:700;font-size:.9rem;text-align:right;}
+.sec-pct{font-size:.68rem;color:var(--text2);text-align:right;}
+
+/* ── HIGHLIGHT ── */
+.hbox{border-radius:var(--rlg);padding:16px 18px;margin-bottom:12px;}
+.hbox.green{background:var(--green-s);border:1.5px solid var(--green-b);}
+.hbox.amber{background:var(--amber-s);border:1.5px solid var(--amber-b);}
+.hbox.blue{background:var(--sw-s);border:1.5px solid var(--sw-b);}
+.hbox.red{background:var(--red-s);border:1.5px solid var(--red-b);}
+.hbox .ht{font-weight:700;font-size:.84rem;margin-bottom:5px;}
+.hbox .hb{font-size:.8rem;color:var(--text2);line-height:1.65;}
+
+/* ── EUR BADGE ── */
+.eur{font-size:.62rem;color:var(--text3);background:var(--bg2);border-radius:4px;padding:1px 5px;margin-left:3px;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:32px 20px;color:var(--text3);}
+.empty .ei{font-size:2rem;margin-bottom:8px;}
+.empty p{font-size:.8rem;}
+
+/* ── RATE BAR ── */
+.rate-bar{background:var(--sw-s);border:1px solid var(--sw-b);border-radius:var(--rsm);padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:.76rem;margin-bottom:16px;flex-wrap:wrap;}
+.rate-bar strong{color:var(--sw);}
+
+/* ── MOBILE ── */
+.mobile-nav{display:none;}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{padding-bottom:calc(var(--nav) + var(--safe));}
+  .page{padding:16px 14px 8px;}
+  .ph h2{font-size:1.2rem;}
+  .g4{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr;}
+  .g2{grid-template-columns:1fr;}
+  .form-row{flex-direction:column;}
+  .fg{min-width:unset;}
+  .fg input,.fg select{font-size:16px;}
+  .btn{width:100%;}
+  .auth-box{padding:28px 20px;}
+  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav)+var(--safe));padding-bottom:var(--safe);background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;}
+  .mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em;padding:6px 2px;-webkit-tap-highlight-color:transparent;transition:color .1s;}
+  .mn-item.active{color:var(--sw);}
+  .mn-item .mi{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:background .1s;}
+  .mn-item.active .mi{background:var(--sw-s);}
+}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--rlg);padding:22px;width:100%;max-width:560px;box-shadow:var(--shlg);max-height:90vh;overflow-y:auto;}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px;}
+.modal-title{font-weight:700;font-size:.96rem;letter-spacing:-.01em;}
+.modal-sub{font-size:.74rem;color:var(--text2);margin-top:2px;}
+.modal-close{background:var(--bg2);border:none;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
+.assign-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);}
+.assign-info{flex:1;min-width:0;}
+.assign-name{font-weight:600;font-size:.8rem;}
+.assign-meta{font-size:.68rem;color:var(--text2);}
+.assign-hrs-input{width:72px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rsm);padding:6px 8px;font-family:var(--f);font-size:.82rem;text-align:center;outline:none;}
+.assign-hrs-input:focus{border-color:var(--sw);box-shadow:0 0 0 3px rgba(59,110,245,.1);}
+.assign-cost-label{font-size:.72rem;color:var(--text2);width:72px;text-align:right;}
+.modal-footer{margin-top:14px;padding-top:12px;border-top:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.modal-summary{font-size:.8rem;color:var(--text2);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">◈</div>
+      <div><h1>Ajans Optimizör</h1><p>Kaynak & Kârlılık Platformu</p></div>
+    </div>
+    <div class="auth-title">Giriş Yap</div>
+    <div class="auth-sub">Devam etmek için hesabınıza giriş yapın.</div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="form-row" style="flex-direction:column;gap:10px">
+      <div class="fg"><label>E-posta</label><input type="email" id="a-email" placeholder="ornek@ajans.com" autocomplete="email"></div>
+      <div class="fg"><label>Şifre</label><input type="password" id="a-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn bp" style="margin-top:4px;width:100%" onclick="signIn()">Giriş Yap</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app-screen">
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">◈</div>
+      <div class="logo-text"><h1>Ajans Opt.</h1><p>Kaynak & Kârlılık</p></div>
+    </div>
+    <div class="nav">
+      <div class="nav-section">Genel</div>
+      <div class="nav-item active" onclick="go('dashboard',this)"><span class="ico">⊞</span>Dashboard</div>
+      <div class="nav-section">Veri Girişi</div>
+      <div class="nav-item" onclick="go('workforce',this)"><span class="ico">👥</span>İş Gücü</div>
+      <div class="nav-item" onclick="go('services',this)"><span class="ico">📋</span>Hizmetler</div>
+      <div class="nav-item" onclick="go('jobs',this)"><span class="ico">🗂</span>Aktif İşler</div>
+      <div class="nav-section">Analiz</div>
+      <div class="nav-item" onclick="go('analysis',this)"><span class="ico">📈</span>Optimizasyon</div>
+      <div class="nav-item" onclick="go('profitability',this)"><span class="ico">💰</span>Kârlılık</div>
+      <div class="nav-section">Yapay Zeka</div>
+      <div class="nav-item" onclick="go('ai',this)"><span class="ico">🤖</span>AI Analizi</div>
+      <div class="nav-section">Sistem</div>
+      <div class="nav-item" onclick="go('settings',this)"><span class="ico">⚙️</span>Ayarlar</div>
+    </div>
+    <div class="nav-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-av">?</div>
+        <div class="user-info">
+          <div class="user-email" id="user-email">—</div>
+          <div class="user-role" id="user-role">Yükleniyor…</div>
+        </div>
+        <button class="btn-signout" onclick="signOut()" title="Çıkış">↩</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph"><h2>Dashboard</h2><p>Ajans geneli anlık özet</p></div>
+      <div id="rate-bar" class="rate-bar" style="display:none">
+        💱 EUR/TRY: <strong id="rate-display">—</strong>
+        <span style="color:var(--text3)">|</span>
+        Personel maliyetleri ×1,3 (sigorta vb.) uygulanmış
+        <span id="rate-update" style="color:var(--text3);margin-left:auto;font-size:.7rem"></span>
+      </div>
+
+      <div class="g4" style="margin-bottom:14px">
+        <div class="stat"><div class="sl">Toplam Kapasite</div><div class="sv" id="d-tcap">0</div><div class="ss">saat/ay</div></div>
+        <div class="stat"><div class="sl">Kullanılan</div><div class="sv" id="d-ucap">0</div><div class="ss">saat/ay</div></div>
+        <div class="stat"><div class="sl">Aylık Gelir</div><div class="sv" style="color:var(--green)" id="d-rev">€0</div><div class="ss">aktif işlerden</div></div>
+        <div class="stat"><div class="sl">Net Kâr</div><div class="sv" id="d-profit">€0</div><div class="ss">gelir − maliyet</div></div>
+      </div>
+
+      <!-- Dept performance -->
+      <div class="g3" style="margin-bottom:14px">
+        <div class="dept-card" id="dd-sw">
+          <div class="dept-head"><div class="dept-name"><span class="dd sw"></span>Yazılım</div><span class="badge bsw" id="d-sw-e">0 kişi</span></div>
+          <div class="prog-meta"><span>Doluluk</span><span id="d-sw-p">0%</span></div>
+          <div class="prog-track"><div class="prog-fill psw" id="d-sw-b" style="width:0%"></div></div>
+          <div class="prog-sub" id="d-sw-i">0 sa boşta</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:.7rem;color:var(--text2)">Gelir: <strong id="d-sw-rev" style="color:var(--sw)">€0</strong></span>
+            <span style="font-size:.7rem;color:var(--text2)">Kâr: <strong id="d-sw-profit">€0</strong></span>
+          </div>
+        </div>
+        <div class="dept-card" id="dd-cr">
+          <div class="dept-head"><div class="dept-name"><span class="dd cr"></span>Kreatif</div><span class="badge bcr" id="d-cr-e">0 kişi</span></div>
+          <div class="prog-meta"><span>Doluluk</span><span id="d-cr-p">0%</span></div>
+          <div class="prog-track"><div class="prog-fill pcr" id="d-cr-b" style="width:0%"></div></div>
+          <div class="prog-sub" id="d-cr-i">0 sa boşta</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:.7rem;color:var(--text2)">Gelir: <strong id="d-cr-rev" style="color:var(--cr)">€0</strong></span>
+            <span style="font-size:.7rem;color:var(--text2)">Kâr: <strong id="d-cr-profit">€0</strong></span>
+          </div>
+        </div>
+        <div class="dept-card" id="dd-pm">
+          <div class="dept-head"><div class="dept-name"><span class="dd pm"></span>Performans Paz.</div><span class="badge bpm" id="d-pm-e">0 kişi</span></div>
+          <div class="prog-meta"><span>Doluluk</span><span id="d-pm-p">0%</span></div>
+          <div class="prog-track"><div class="prog-fill ppm" id="d-pm-b" style="width:0%"></div></div>
+          <div class="prog-sub" id="d-pm-i">0 sa boşta</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:.7rem;color:var(--text2)">Gelir: <strong id="d-pm-rev" style="color:var(--pm)">€0</strong></span>
+            <span style="font-size:.7rem;color:var(--text2)">Kâr: <strong id="d-pm-profit">€0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sector analysis -->
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">🏆 En Kârlı Departman & Sektörler</div>
+          <div id="d-best-dept" style="margin-bottom:12px"></div>
+          <div id="d-sectors-pos"></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">⚠️ Dikkat: Düşük Kâr / Zararlı</div>
+          <div id="d-worst-dept" style="margin-bottom:12px"></div>
+          <div id="d-sectors-neg"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;border-left:3.5px solid var(--sw)">
+        <div style="font-size:.68rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⚡ Anlık Öneri</div>
+        <div id="d-rec" style="font-size:.82rem;color:var(--text2);line-height:1.6">Veri girişi yapınca otomatik öneri görünür.</div>
+      </div>
+    </div>
+
+    <!-- ═══ WORKFORCE ═══ -->
+    <div class="page" id="page-workforce">
+      <div class="ph"><h2>İş Gücü</h2><p>Çalışanlar, kıdemler ve aylık kapasite — maliyet ×1,3 (sigorta dahil)</p></div>
+      <div class="card">
+        <div class="card-title">Yeni Çalışan</div>
+        <div class="form-row">
+          <div class="fg" style="flex:2"><label>Ad Soyad</label><input id="en" placeholder="Ahmet Yılmaz" autocomplete="off"></div>
+          <div class="fg"><label>Departman</label>
+            <select id="ed"><option value="sw">Yazılım</option><option value="cr">Kreatif</option><option value="pm">Performans Paz.</option></select>
+          </div>
+          <div class="fg"><label>Kıdem</label><select id="esn" id="esn"></select></div>
+          <div class="fg"><label>Kapasite (sa/ay)</label><input type="number" id="ec" value="160" min="1" inputmode="numeric"></div>
+          <div class="fg"><label>Aylık Maliyet (₺)</label><input type="number" id="ek" placeholder="30000" min="0" inputmode="numeric"></div>
+          <div class="fg" style="max-width:100px"><label>&nbsp;</label><button class="btn bp" onclick="addEmp()">+ Ekle</button></div>
+        </div>
+        <div style="margin-top:10px;font-size:.72rem;color:var(--text3)">* Girilen maliyet ×1,3 olarak hesaplanır (sigorta, yemek vb.)</div>
+      </div>
+      <div class="card">
+        <div class="card-row"><div class="card-title">Çalışan Listesi</div><span class="badge bok" id="emp-cnt">0 çalışan</span></div>
+        <div class="tw"><table>
+          <thead><tr><th>Ad Soyad</th><th>Dept.</th><th>Kıdem</th><th>Kapasite</th><th>Doluluk</th><th>Brüt Maliyet ₺</th><th>Gerçek Maliyet ₺</th><th>Sa/EUR*</th><th></th></tr></thead>
+          <tbody id="emp-tb"><tr><td colspan="9"><div class="empty"><div class="ei">👥</div><p>Henüz çalışan eklenmedi</p></div></td></tr></tbody>
+        </table></div>
+        <div style="margin-top:8px;font-size:.68rem;color:var(--text3)">* Güncel EUR/TRY kuru üzerinden hesaplanır</div>
+      </div>
+    </div>
+
+    <!-- ═══ SERVICES ═══ -->
+    <div class="page" id="page-services">
+      <div class="ph"><h2>Hizmetler</h2><p>Fiyatlar EUR — beklenen kâr = fiyatın 1/3'ü · gerçekleşen kâr saat maliyetine göre hesaplanır</p></div>
+      <div class="card">
+        <div class="card-title">Yeni Hizmet</div>
+        <div class="form-row">
+          <div class="fg" style="flex:2"><label>Hizmet Adı</label><input id="sn" placeholder="Google Ads Yönetimi" autocomplete="off"></div>
+          <div class="fg"><label>Departman</label>
+            <select id="sd"><option value="sw">Yazılım</option><option value="cr">Kreatif</option><option value="pm">Performans Paz.</option></select>
+          </div>
+          <div class="fg"><label>Aylık Fiyat (€)</label><input type="number" id="sp" placeholder="1000" min="0" inputmode="numeric"></div>
+          <div class="fg"><label>Gereken Saat/Ay</label><input type="number" id="sh" placeholder="20" min="1" inputmode="numeric"></div>
+          <div class="fg" style="max-width:100px"><label>&nbsp;</label><button class="btn bp" onclick="addSvc()">+ Ekle</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Hizmet Kataloğu</div>
+        <div class="tw"><table>
+          <thead><tr><th>Hizmet</th><th>Dept.</th><th>Fiyat (€)</th><th>Beklenen Kâr (€)</th><th>Saat</th><th>Sa Başı Gelir</th><th>Gerçekleşen Kâr*</th><th>Marj*</th><th></th></tr></thead>
+          <tbody id="svc-tb"><tr><td colspan="9"><div class="empty"><div class="ei">📋</div><p>Henüz hizmet eklenmedi</p></div></td></tr></tbody>
+        </table></div>
+        <div style="margin-top:8px;font-size:.68rem;color:var(--text3)">* Çalışan maliyeti girilince EUR cinsinden hesaplanır</div>
+      </div>
+    </div>
+
+    <!-- ═══ JOBS ═══ -->
+    <div class="page" id="page-jobs">
+      <div class="ph"><h2>Aktif İşler</h2><p>Mevcut müşteri işleri — gelirler EUR · sektör ataması yapılabilir</p></div>
+      <div class="card">
+        <div class="card-title">Yeni İş Ekle</div>
+        <div class="form-row">
+          <div class="fg" style="flex:2"><label>Marka / Müşteri</label><input id="jc" placeholder="Mercure Hotel" autocomplete="off"></div>
+          <div class="fg"><label>Sektör</label>
+            <select id="jsec">
+              <option value="Turizm & Otel">Turizm & Otel</option>
+              <option value="E-ticaret">E-ticaret</option>
+              <option value="İnşaat & GYO">İnşaat & GYO</option>
+              <option value="Tekstil & Moda">Tekstil & Moda</option>
+              <option value="Gıda & İçecek">Gıda & İçecek</option>
+              <option value="Sağlık">Sağlık</option>
+              <option value="Eğitim">Eğitim</option>
+              <option value="Teknoloji">Teknoloji</option>
+              <option value="Otomotiv">Otomotiv</option>
+              <option value="Perakende">Perakende</option>
+              <option value="Finans">Finans</option>
+              <option value="Diğer">Diğer</option>
+            </select>
+          </div>
+          <div class="fg" style="flex:2"><label>Hizmet</label><select id="js"><option value="">— Hizmet Seç —</option></select></div>
+          <div class="fg"><label>Aylık Gelir (€)</label><input type="number" id="jr" placeholder="1000" min="0" inputmode="numeric"></div>
+          <div class="fg"><label>Saat/Ay</label><input type="number" id="jh" placeholder="20" min="0" inputmode="numeric"></div>
+          <div class="fg" style="max-width:100px"><label>&nbsp;</label><button class="btn bp" onclick="addJob()">+ Ekle</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row"><div class="card-title">Aktif İş Listesi</div><div id="j-sum" style="font-size:.76rem;color:var(--text2)"></div></div>
+        <div class="tw"><table>
+          <thead><tr><th>Marka</th><th>Sektör</th><th>Hizmet</th><th>Dept.</th><th>Gelir (€)</th><th>Saat/Ay</th><th>Personel</th><th>Kâr (€)</th><th>Marj</th><th></th></tr></thead>
+          <tbody id="job-tb"><tr><td colspan="9"><div class="empty"><div class="ei">🗂</div><p>Henüz iş eklenmedi</p></div></td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ═══ ANALYSIS ═══ -->
+    <div class="page" id="page-analysis">
+      <div class="ph"><h2>Optimizasyon</h2><p>Yeni müşteri fırsatları · süre optimizasyonu · paket önerileri</p></div>
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchAnTab('tekil',this)">🎯 Tekil Fırsatlar</button>
+        <button class="tab" onclick="switchAnTab('blend',this)">📦 Paket Fırsatlar</button>
+      </div>
+      <div id="an-tekil"></div>
+      <div id="an-blend" style="display:none"></div>
+    </div>
+
+    <!-- ═══ PROFITABILITY ═══ -->
+    <div class="page" id="page-profitability">
+      <div class="ph"><h2>Kârlılık Analizi</h2><p>Hizmet ve sektör bazlı kâr marjları — EUR cinsinden</p></div>
+      <div id="pr-root"></div>
+    </div>
+
+    <!-- ═══ AI ═══ -->
+    <div class="page" id="page-ai">
+      <div class="ph"><h2>AI Analizi</h2><p>Ajans verilerine dayalı yapay zeka yorumu ve önerileri</p></div>
+
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card" style="margin-bottom:0;cursor:pointer;transition:box-shadow .15s" onclick="runAI('profitability')" id="ai-btn-profitability">
+          <div style="font-size:1.8rem;margin-bottom:8px">📊</div>
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Kârlılık Analizi</div>
+          <div style="font-size:.78rem;color:var(--text2)">Hizmet ve sektör bazlı kâr marjlarını yorumla, zayıf noktaları belirle</div>
+        </div>
+        <div class="card" style="margin-bottom:0;cursor:pointer;transition:box-shadow .15s" onclick="runAI('optimization')" id="ai-btn-optimization">
+          <div style="font-size:1.8rem;margin-bottom:8px">🎯</div>
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Büyüme Fırsatları</div>
+          <div style="font-size:.78rem;color:var(--text2)">Boş kapasiteyi değerlendir, hangi hizmete odaklanmalısın?</div>
+        </div>
+        <div class="card" style="margin-bottom:0;cursor:pointer;transition:box-shadow .15s" onclick="runAI('workforce')" id="ai-btn-workforce">
+          <div style="font-size:1.8rem;margin-bottom:8px">👥</div>
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Ekip & Kapasite</div>
+          <div style="font-size:.78rem;color:var(--text2)">Personel dağılımını, doluluk oranlarını ve işgücü verimliliğini değerlendir</div>
+        </div>
+        <div class="card" style="margin-bottom:0;cursor:pointer;transition:box-shadow .15s" onclick="runAI('strategy')" id="ai-btn-strategy">
+          <div style="font-size:1.8rem;margin-bottom:8px">🧭</div>
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Strateji Önerileri</div>
+          <div style="font-size:.78rem;color:var(--text2)">Tüm verilerden sentez çıkar, öncelikli aksiyon adımlarını listele</div>
+        </div>
+      </div>
+
+      <div id="ai-result" style="display:none">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-weight:700;font-size:.9rem" id="ai-result-title"></div>
+            <button class="btn bg bsm" onclick="document.getElementById('ai-result').style.display='none'">Kapat</button>
+          </div>
+          <div id="ai-result-body" style="font-size:.84rem;line-height:1.8;color:var(--text2)"></div>
+        </div>
+      </div>
+
+      <div id="ai-loading" style="display:none">
+        <div class="card" style="text-align:center;padding:40px">
+          <div style="font-size:2rem;margin-bottom:12px">🤖</div>
+          <div style="font-weight:600;margin-bottom:6px">Analiz ediliyor…</div>
+          <div style="font-size:.78rem;color:var(--text3)">Ajans verileri işleniyor, birkaç saniye bekle</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="page" id="page-settings">
+      <div class="ph"><h2>Ayarlar</h2><p>Kıdem seviyeleri, döviz kuru ve kullanıcı yönetimi</p></div>
+
+      <!-- EUR Rate -->
+      <div class="card">
+        <div class="card-title">💱 EUR / TRY Kuru</div>
+        <div class="form-row" style="align-items:flex-end">
+          <div class="fg"><label>Manuel Kur (₺)</label><input type="number" id="manual-rate" placeholder="Ör: 38.5" min="0" step="0.01" inputmode="decimal"></div>
+          <div class="fg" style="max-width:160px"><label>&nbsp;</label><button class="btn bp" onclick="saveManualRate()">Kaydet</button></div>
+          <div class="fg" style="max-width:160px"><label>&nbsp;</label><button class="btn bg" onclick="fetchRate()">API'den Güncelle</button></div>
+        </div>
+        <div id="rate-status" style="margin-top:10px;font-size:.76rem;color:var(--text2)"></div>
+      </div>
+
+      <!-- Seniority -->
+      <div class="card">
+        <div class="card-row"><div class="card-title">🎖 Kıdem Seviyeleri</div><button class="btn bp bsm" onclick="addSeniority()">+ Ekle</button></div>
+        <div id="seniority-list"></div>
+      </div>
+
+      <!-- Users (admin only) -->
+      <div class="card" id="users-card" style="display:none">
+        <div class="card-title">👤 Kullanıcı Yönetimi</div>
+        <div style="font-size:.8rem;color:var(--text2);margin-bottom:14px">Yeni kullanıcı davet etmek için Firebase Authentication konsolunu kullanın. Rol atamak için aşağıdan düzenleyin.</div>
+        <div id="users-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ASSIGNMENT MODAL -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="am-title">Personel Ata</div>
+        <div class="modal-sub" id="am-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div id="am-body"></div>
+    <div class="modal-footer">
+      <div class="modal-summary" id="am-summary"></div>
+      <button class="btn bp" onclick="saveAssignments()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <div class="mn-item active" onclick="mGo('dashboard',this)"><div class="mi">⊞</div><span>Özet</span></div>
+  <div class="mn-item" onclick="mGo('workforce',this)"><div class="mi">👥</div><span>Kadro</span></div>
+  <div class="mn-item" onclick="mGo('services',this)"><div class="mi">📋</div><span>Hizmet</span></div>
+  <div class="mn-item" onclick="mGo('jobs',this)"><div class="mi">🗂</div><span>İşler</span></div>
+  <div class="mn-item" onclick="mGo('analysis',this)"><div class="mi">📈</div><span>Analiz</span></div>
+  <div class="mn-item" onclick="mGo('profitability',this)"><div class="mi">💰</div><span>Kâr</span></div>
+  <div class="mn-item" onclick="mGo('ai',this)"><div class="mi">🤖</div><span>AI</span></div>
+</nav>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   FIREBASE CONFIG — kendi bilgilerinle doldur
+   ════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "AIzaSyAdmUcRPEu0w4kP-yapr8wHhPIlGt1aE2c",
+  authDomain:        "agency-optimizer.firebaseapp.com",
+  projectId:         "agency-optimizer",
+  storageBucket:     "agency-optimizer.firebasestorage.app",
+  messagingSenderId: "265440092392",
+  appId:             "1:265440092392:web:0e930a4cd6dbe516b6e95d"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* ════ CONSTANTS ════ */
+const COST_MULTIPLIER = 1.3;
+const DEPTS = { sw:'Yazılım', cr:'Kreatif', pm:'Performans Paz.' };
+const DB    = { sw:'bsw', cr:'bcr', pm:'bpm' };
+const DEFAULT_SENIORITIES = ['Agent','Junior','Senior','Manager','Senior Manager'];
+
+/* ════ STATE ════ */
+let S = {
+  employees:   [],
+  services:    [],
+  jobs:        [],
+  seniorities: [],
+  users:       [],
+  eurTry:      35.0,
+  currentUser: null,
+  currentRole: 'user',
+};
+let unsubs = [];
+
+/* ════ HELPERS ════ */
+const fmtE  = n => '€' + new Intl.NumberFormat('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+const fmtT  = n => '₺' + new Intl.NumberFormat('tr-TR').format(Math.round(n));
+const fmtN  = n => new Intl.NumberFormat('tr-TR').format(Math.round(n));
+const pct   = (a,b) => b>0 ? Math.min(Math.round(a/b*100),100) : 0;
+const mc    = m => m > 55 ? 'var(--green)' : m > 20 ? 'var(--amber)' : 'var(--red)';
+const mcBadge = m => m > 55 ? 'bok' : m > 20 ? 'bwarn' : 'bfull';
+
+// Dept helpers — cost includes ×1.3
+const dCap    = d => S.employees.filter(e=>e.dept===d).reduce((s,e)=>s+e.cap,0);
+const dUsed   = d => S.jobs.filter(j=>j.dept===d).reduce((s,j)=>s+j.hrs,0);
+const dCostTL = d => S.employees.filter(e=>e.dept===d).reduce((s,e)=>s+(e.costTL*COST_MULTIPLIER),0);
+const dCostEUR= d => dCostTL(d) / S.eurTry;
+const hrRateTL = d => { const c=dCap(d); return c>0 ? dCostTL(d)/c : 0; };
+const hrRateEUR= d => hrRateTL(d) / S.eurTry;
+const fCls = (p,d) => p>90?'pfull':p>70?'pwarn':('p'+d);
+
+const seniorityName = id => {
+  const s = S.seniorities.find(x => x.id===id);
+  return s ? s.name : id || '—';
+};
+
+/* ════ AUTH ════ */
+async function signIn() {
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  const err   = document.getElementById('auth-err');
+  err.classList.remove('show');
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    err.textContent = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password'
+      ? 'E-posta veya şifre hatalı.' : e.message;
+    err.classList.add('show');
+  }
+}
+async function signOut() {
+  unsubs.forEach(u=>u()); unsubs=[];
+  await auth.signOut();
+}
+document.getElementById('a-pass').addEventListener('keydown', e => { if(e.key==='Enter') signIn(); });
+
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display  = 'none';
+    return;
+  }
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'block';
+
+  S.currentUser = user;
+  document.getElementById('user-email').textContent = user.email;
+  document.getElementById('user-av').textContent = user.email.charAt(0).toUpperCase();
+
+  // Load user role
+  const userDoc = await db.collection('users').doc(user.uid).get();
+  if (!userDoc.exists) {
+    await db.collection('users').doc(user.uid).set({ email:user.email, role:'user' });
+    S.currentRole = 'user';
+  } else {
+    S.currentRole = userDoc.data().role || 'user';
+  }
+  document.getElementById('user-role').textContent = S.currentRole === 'admin' ? 'Yönetici' : 'Kullanıcı';
+  if (S.currentRole === 'admin') {
+    document.getElementById('users-card').style.display = 'block';
+  }
+
+  startListeners();
+  fetchRate();
+});
+
+/* ════ FIRESTORE LISTENERS ════ */
+function startListeners() {
+  unsubs.push(
+    db.collection('seniorities').orderBy('order').onSnapshot(snap => {
+      S.seniorities = snap.docs.map(d=>({id:d.id,...d.data()}));
+      if (!S.seniorities.length) seedSeniorities();
+      renderSeniorities(); updateSenioritySelect();
+    }),
+    db.collection('employees').orderBy('name').onSnapshot(snap => {
+      S.employees = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderEmps(); renderDash();
+    }),
+    db.collection('services').orderBy('name').onSnapshot(snap => {
+      S.services = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderSvcs(); syncJobSvcSelect();
+    }),
+    db.collection('jobs').orderBy('client').onSnapshot(snap => {
+      S.jobs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderJobs(); renderDash();
+    }),
+    db.collection('settings').doc('global').onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        if (d.eurTry) { S.eurTry = d.eurTry; updateRateDisplay(); }
+      }
+    })
+  );
+  if (S.currentRole==='admin') {
+    unsubs.push(
+      db.collection('users').onSnapshot(snap => {
+        S.users = snap.docs.map(d=>({id:d.id,...d.data()}));
+        renderUsers();
+      })
+    );
+  }
+}
+
+/* ════ EUR RATE ════ */
+async function fetchRate() {
+  document.getElementById('rate-status').textContent = 'Kur güncelleniyor…';
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=TRY');
+    if (!r.ok) throw new Error('API hatası');
+    const d = await r.json();
+    const rate = d.rates.TRY;
+    await db.collection('settings').doc('global').set({ eurTry: rate, rateUpdated: new Date().toISOString() }, { merge:true });
+    document.getElementById('rate-status').textContent = `✓ Kur güncellendi: ${rate.toFixed(2)} ₺/€`;
+  } catch(e) {
+    document.getElementById('rate-status').textContent = '⚠ API\'ye ulaşılamadı. Manuel kur kullanılıyor.';
+  }
+}
+async function saveManualRate() {
+  const v = parseFloat(document.getElementById('manual-rate').value);
+  if (!v || v <= 0) { alert('Geçerli bir kur girin'); return; }
+  await db.collection('settings').doc('global').set({ eurTry:v, rateUpdated: 'Manuel' }, { merge:true });
+  document.getElementById('rate-status').textContent = `✓ Manuel kur kaydedildi: ${v} ₺/€`;
+}
+function updateRateDisplay() {
+  document.getElementById('rate-bar').style.display = 'flex';
+  document.getElementById('rate-display').textContent = `${S.eurTry.toFixed(2)} ₺`;
+  document.getElementById('rate-update').textContent = '';
+  document.getElementById('manual-rate').placeholder = S.eurTry.toFixed(2);
+}
+
+/* ════ SENIORITIES ════ */
+async function seedSeniorities() {
+  const batch = db.batch();
+  DEFAULT_SENIORITIES.forEach((name,i) => {
+    const ref = db.collection('seniorities').doc();
+    batch.set(ref, { name, order:i });
+  });
+  await batch.commit();
+}
+function updateSenioritySelect() {
+  const sel = document.getElementById('esn');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = S.seniorities.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+function renderSeniorities() {
+  const el = document.getElementById('seniority-list');
+  if (!el) return;
+  if (!S.seniorities.length) { el.innerHTML = '<div class="empty"><p>Kıdem eklenmedi</p></div>'; return; }
+  el.innerHTML = S.seniorities.map((s,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <span class="badge bneu" style="min-width:24px;justify-content:center">${i+1}</span>
+      <input value="${s.name}" id="sname-${s.id}" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-family:var(--f);font-size:.82rem;outline:none" 
+        onchange="renameSeniority('${s.id}',this.value)">
+      <button class="btn bg" style="padding:5px 10px;font-size:.7rem" onclick="deleteSeniority('${s.id}')">✕</button>
+    </div>`).join('');
+}
+async function addSeniority() {
+  const name = prompt('Kıdem adı:');
+  if (!name) return;
+  await db.collection('seniorities').add({ name: name.trim(), order: S.seniorities.length });
+}
+async function renameSeniority(id, name) {
+  await db.collection('seniorities').doc(id).update({ name });
+}
+async function deleteSeniority(id) {
+  if (!confirm('Bu kıdem silinsin mi?')) return;
+  await db.collection('seniorities').doc(id).delete();
+}
+
+/* ════ USERS ════ */
+function renderUsers() {
+  const el = document.getElementById('users-list'); if(!el) return;
+  if (!S.users.length) { el.innerHTML='<div class="empty"><p>Kullanıcı yok</p></div>'; return; }
+  el.innerHTML = S.users.map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:.82rem">${u.email}</div>
+        <div style="font-size:.68rem;color:var(--text3)">${u.id}</div>
+      </div>
+      <select onchange="setUserRole('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:var(--rsm);padding:5px 8px;font-family:var(--f);font-size:.76rem;background:var(--bg)">
+        <option value="user" ${u.role!=='admin'?'selected':''}>Kullanıcı</option>
+        <option value="admin" ${u.role==='admin'?'selected':''}>Yönetici</option>
+      </select>
+    </div>`).join('');
+}
+async function setUserRole(uid, role) {
+  await db.collection('users').doc(uid).update({ role });
+}
+
+/* ════ NAVIGATION ════ */
+function go(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (el) el.classList.add('active');
+  if (page==='dashboard')    renderDash();
+  if (page==='analysis')     { renderAnTekil(); renderAnBlend(); }
+  if (page==='profitability') renderPr();
+  if (page==='jobs')         syncJobSvcSelect();
+  window.scrollTo(0,0);
+}
+function mGo(page, el) {
+  document.querySelectorAll('.mn-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  go(page, null);
+}
+function switchAnTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('an-tekil').style.display = tab==='tekil'?'block':'none';
+  document.getElementById('an-blend').style.display = tab==='blend'?'block':'none';
+}
+
+/* ════ EMPLOYEES ════ */
+async function addEmp() {
+  const name = document.getElementById('en').value.trim();
+  const dept = document.getElementById('ed').value;
+  const senId= document.getElementById('esn').value;
+  const cap  = parseInt(document.getElementById('ec').value)||0;
+  const costTL=parseFloat(document.getElementById('ek').value)||0;
+  if (!name||cap<=0) { alert('Ad ve kapasite zorunlu!'); return; }
+  await db.collection('employees').add({ name,dept,seniorityId:senId,cap,costTL, createdBy:S.currentUser.uid });
+  document.getElementById('en').value=''; document.getElementById('ec').value='160'; document.getElementById('ek').value='';
+}
+async function delEmp(id) {
+  if (!confirm('Silinsin mi?')) return;
+  await db.collection('employees').doc(id).delete();
+}
+function renderEmps() {
+  const tb = document.getElementById('emp-tb');
+  document.getElementById('emp-cnt').textContent = S.employees.length+' çalışan';
+  if (!S.employees.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👥</div><p>Henüz çalışan eklenmedi</p></div></td></tr>'; return; }
+  tb.innerHTML = S.employees.map(e => {
+    const dC=dCap(e.dept), dU=dUsed(e.dept);
+    const eu = dC>0 ? (dU/dC)*e.cap : 0;
+    const p  = pct(eu,e.cap);
+    const costActual = e.costTL * COST_MULTIPLIER;
+    const hrEUR = e.cap>0 ? (costActual/S.eurTry)/e.cap : 0;
+    return `<tr>
+      <td><strong>${e.name}</strong></td>
+      <td><span class="badge ${DB[e.dept]}">${DEPTS[e.dept]}</span></td>
+      <td><span class="badge bneu">${seniorityName(e.seniorityId)}</span></td>
+      <td>${fmtN(e.cap)} sa</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="prog-track" style="width:60px"><div class="prog-fill ${fCls(p,e.dept)}" style="width:${p}%"></div></div>
+        <span style="font-size:.7rem;color:var(--text2)">${p}%</span></div></td>
+      <td style="color:var(--text2)">${e.costTL ? fmtT(e.costTL) : '—'}</td>
+      <td style="font-weight:600">${e.costTL ? fmtT(costActual) : '—'}</td>
+      <td style="color:var(--sw)">${hrEUR>0 ? '€'+hrEUR.toFixed(2)+'/sa' : '—'}</td>
+      <td><button class="btn bg" onclick="delEmp('${e.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════ SERVICES ════ */
+async function addSvc() {
+  const name = document.getElementById('sn').value.trim();
+  const dept = document.getElementById('sd').value;
+  const price= parseFloat(document.getElementById('sp').value)||0;
+  const hours= parseInt(document.getElementById('sh').value)||0;
+  if (!name||price<=0||hours<=0) { alert('Tüm alanları doldur!'); return; }
+  await db.collection('services').add({ name,dept,priceEUR:price,hours, createdBy:S.currentUser.uid });
+  document.getElementById('sn').value=''; document.getElementById('sp').value=''; document.getElementById('sh').value='';
+}
+async function delSvc(id) {
+  if (!confirm('Silinsin mi?')) return;
+  await db.collection('services').doc(id).delete();
+}
+function renderSvcs() {
+  const tb = document.getElementById('svc-tb');
+  if (!S.services.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">📋</div><p>Henüz hizmet eklenmedi</p></div></td></tr>'; return; }
+  tb.innerHTML = S.services.map(s => {
+    const hrE = hrRateEUR(s.dept);
+    const costEUR = s.hours * hrE;
+    const expProfit = s.priceEUR / 3;
+    const actProfit = s.priceEUR - costEUR;
+    const margin = s.priceEUR>0 ? (actProfit/s.priceEUR)*100 : 0;
+    const hrRev = s.hours>0 ? s.priceEUR/s.hours : 0;
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="badge ${DB[s.dept]}">${DEPTS[s.dept]}</span></td>
+      <td style="font-weight:600">€${fmtN(s.priceEUR)}</td>
+      <td style="color:var(--sw);font-weight:600">€${fmtN(expProfit)}</td>
+      <td>${s.hours} sa</td>
+      <td style="color:var(--text2)">€${hrRev.toFixed(1)}/sa</td>
+      <td style="color:${hrE>0?mc(margin):'var(--text3)'};font-weight:600">${hrE>0?'€'+fmtN(actProfit):'—'}</td>
+      <td style="color:${hrE>0?mc(margin):'var(--text3)'};font-weight:700">${hrE>0?Math.round(margin)+'%':'—'}</td>
+      <td><button class="btn bg" onclick="delSvc('${s.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════ JOBS ════ */
+function syncJobSvcSelect() {
+  const sel = document.getElementById('js'); const cur=sel.value;
+  sel.innerHTML='<option value="">— Hizmet Seç —</option>'+
+    S.services.map(s=>`<option value="${s.id}">${s.name} (${DEPTS[s.dept]})</option>`).join('');
+  if(cur) sel.value=cur;
+  sel.onchange=function(){
+    const s=S.services.find(sv=>sv.id===this.value);
+    if(s){document.getElementById('jr').value=s.priceEUR; document.getElementById('jh').value=s.hours;}
+  };
+}
+async function addJob() {
+  const client = document.getElementById('jc').value.trim();
+  const sector = document.getElementById('jsec').value;
+  const svcId  = document.getElementById('js').value;
+  const rev    = parseFloat(document.getElementById('jr').value)||0;
+  const hrs    = parseInt(document.getElementById('jh').value)||0;
+  if (!client||!svcId||rev<=0||hrs<=0) { alert('Tüm alanları doldur!'); return; }
+  const svc = S.services.find(s=>s.id===svcId); if(!svc) return;
+  await db.collection('jobs').add({ client,sector,svcId,svcName:svc.name,dept:svc.dept,revEUR:rev,hrs, createdBy:S.currentUser.uid });
+  document.getElementById('jc').value=''; document.getElementById('js').value=''; document.getElementById('jr').value=''; document.getElementById('jh').value='';
+}
+async function delJob(id) {
+  if (!confirm('Silinsin mi?')) return;
+  await db.collection('jobs').doc(id).delete();
+}
+/* ════ JOB COST FROM ASSIGNMENTS ════ */
+function getJobCost(job) {
+  const assigns = job.assignments || [];
+  if (!assigns.length) return null;
+  return assigns.reduce((sum, a) => {
+    const emp = S.employees.find(e => e.id === a.empId);
+    if (!emp || !emp.cap || !emp.costTL) return sum;
+    const hrCostEUR = (emp.costTL * COST_MULTIPLIER) / S.eurTry / emp.cap;
+    return sum + hrCostEUR * a.hrs;
+  }, 0);
+}
+function getJobAssignedHrs(job) {
+  return (job.assignments||[]).reduce((s,a)=>s+a.hrs,0);
+}
+
+function renderJobs() {
+  const tb=document.getElementById('job-tb'), se=document.getElementById('j-sum');
+  if (!S.jobs.length) { tb.innerHTML='<tr><td colspan="10"><div class="empty"><div class="ei">🗂</div><p>Henüz iş eklenmedi</p></div></td></tr>'; se.textContent=''; return; }
+  const tR=S.jobs.reduce((s,j)=>s+j.revEUR,0);
+  se.innerHTML=`Toplam: <strong style="color:var(--green)">${fmtE(tR)}/ay</strong> · ${S.jobs.length} müşteri`;
+  tb.innerHTML = S.jobs.map(j => {
+    const cost = getJobCost(j);
+    const assigns = j.assignments || [];
+    const assignedHrs = getJobAssignedHrs(j);
+    const hasAssign = assigns.length > 0;
+    const profit = cost !== null ? j.revEUR - cost : null;
+    const margin = profit !== null && j.revEUR > 0 ? (profit/j.revEUR)*100 : null;
+    const mC = margin !== null ? mc(margin) : 'var(--text3)';
+    const empNames = assigns.map(a => {
+      const e = S.employees.find(x=>x.id===a.empId);
+      return e ? `${e.name.split(' ')[0]} (${a.hrs}sa)` : '';
+    }).filter(Boolean).join(', ');
+    const hrsOk = assignedHrs === j.hrs;
+    const hrsBadge = hasAssign
+      ? `<span style="font-size:.64rem;color:${hrsOk?'var(--green)':'var(--amber)'}">${assignedHrs}/${j.hrs}sa</span>`
+      : '<span style="font-size:.64rem;color:var(--text3)">atanmadı</span>';
+    return `<tr>
+      <td><strong>${j.client}</strong></td>
+      <td><span class="badge bneu" style="font-size:.62rem">${j.sector||'—'}</span></td>
+      <td style="color:var(--text2)">${j.svcName}</td>
+      <td><span class="badge ${DB[j.dept]}">${DEPTS[j.dept]}</span></td>
+      <td style="color:var(--green);font-weight:600">${fmtE(j.revEUR)}</td>
+      <td>${j.hrs} sa</td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <button class="btn bg" style="padding:4px 8px;font-size:.68rem;width:auto" onclick="openAssignModal('${j.id}')">👤 Ata</button>
+          ${hrsBadge}
+          ${empNames ? `<span style="font-size:.62rem;color:var(--text2);line-height:1.3">${empNames}</span>` : ''}
+        </div>
+      </td>
+      <td style="color:${mC};font-weight:600">${profit!==null?fmtE(profit):'—'}</td>
+      <td style="color:${mC};font-weight:700">${margin!==null?Math.round(margin)+'%':'—'}</td>
+      <td><button class="btn bg" onclick="delJob('${j.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════ ASSIGNMENT MODAL ════ */
+let currentAssignJobId = null;
+let tempAssignments = {};
+
+function openAssignModal(jobId) {
+  const job = S.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  currentAssignJobId = jobId;
+  // Deep copy current assignments
+  tempAssignments = {};
+  (job.assignments || []).forEach(a => { tempAssignments[a.empId] = a.hrs; });
+
+  document.getElementById('am-title').textContent = job.client + ' — Personel Ataması';
+  document.getElementById('am-sub').textContent = job.svcName + ' · Toplam: ' + job.hrs + ' sa/ay';
+  renderAssignModal(job);
+  document.getElementById('assign-modal').classList.add('open');
+}
+
+function closeAssignModal() {
+  document.getElementById('assign-modal').classList.remove('open');
+  currentAssignJobId = null;
+  tempAssignments = {};
+}
+
+function renderAssignModal(job) {
+  const body = document.getElementById('am-body');
+  const summary = document.getElementById('am-summary');
+  if (!S.employees.length) {
+    body.innerHTML = '<div class="empty"><p>Önce İş Gücü bölümünden çalışan ekle.</p></div>';
+    return;
+  }
+  // Filter relevant dept employees first, then others
+  const deptEmps = S.employees.filter(e => e.dept === job.dept);
+  const otherEmps = S.employees.filter(e => e.dept !== job.dept);
+  const allEmps = [...deptEmps, ...otherEmps];
+
+  body.innerHTML = allEmps.map(e => {
+    const hrs = tempAssignments[e.id] || 0;
+    const hrCostEUR = e.cap > 0 ? (e.costTL * 1.3) / S.eurTry / e.cap : 0;
+    const costForHrs = hrCostEUR * hrs;
+    const isDiff = e.dept !== job.dept;
+    return `<div class="assign-row" style="${isDiff ? 'opacity:.7' : ''}">
+      <div class="assign-info">
+        <div class="assign-name">${e.name} ${isDiff ? '<span style="font-size:.6rem;color:var(--text3)">(farklı dept.)</span>' : ''}</div>
+        <div class="assign-meta">
+          <span class="badge ${DB[e.dept]}" style="margin-right:4px">${DEPTS[e.dept]}</span>
+          ${seniorityName(e.seniorityId)} · 
+          ${hrCostEUR > 0 ? '€' + hrCostEUR.toFixed(2) + '/sa' : 'maliyet girilmemiş'}
+        </div>
+      </div>
+      <input type="number" class="assign-hrs-input" min="0" max="${job.hrs}" value="${hrs}"
+        inputmode="numeric" placeholder="0"
+        onchange="updateTempAssign('${e.id}', this.value, '${job.id}')"
+        oninput="updateTempAssign('${e.id}', this.value, '${job.id}')">
+      <div class="assign-cost-label" id="ac-${e.id}">
+        ${costForHrs > 0 ? '€' + costForHrs.toFixed(0) : '—'}
+      </div>
+    </div>`;
+  }).join('');
+  updateAssignSummary(job);
+}
+
+function updateTempAssign(empId, val, jobId) {
+  const hrs = parseInt(val) || 0;
+  if (hrs <= 0) delete tempAssignments[empId];
+  else tempAssignments[empId] = hrs;
+  // Update cost label
+  const emp = S.employees.find(e => e.id === empId);
+  if (emp && emp.cap > 0) {
+    const hrCostEUR = (emp.costTL * 1.3) / S.eurTry / emp.cap;
+    const el = document.getElementById('ac-' + empId);
+    if (el) el.textContent = hrs > 0 ? '€' + (hrCostEUR * hrs).toFixed(0) : '—';
+  }
+  const job = S.jobs.find(j => j.id === jobId);
+  if (job) updateAssignSummary(job);
+}
+
+function updateAssignSummary(job) {
+  const summary = document.getElementById('am-summary');
+  const totalHrs = Object.values(tempAssignments).reduce((s,h)=>s+h,0);
+  let totalCost = 0;
+  Object.entries(tempAssignments).forEach(([empId, hrs]) => {
+    const emp = S.employees.find(e => e.id === empId);
+    if (emp && emp.cap > 0 && emp.costTL) {
+      totalCost += (emp.costTL * 1.3) / S.eurTry / emp.cap * hrs;
+    }
+  });
+  const profit = job.revEUR - totalCost;
+  const margin = job.revEUR > 0 ? (profit / job.revEUR * 100) : 0;
+  const hrsOk = totalHrs === job.hrs;
+  summary.innerHTML = `
+    <div>Toplam atanan: <strong style="color:${hrsOk?'var(--green)':'var(--amber)'}">${totalHrs} / ${job.hrs} sa</strong></div>
+    ${totalCost > 0 ? `<div>Tahmini maliyet: <strong>€${totalCost.toFixed(0)}</strong> · Kâr: <strong style="color:${profit>=0?'var(--green)':'var(--red)'}">${fmtE(profit)}</strong> · Marj: <strong style="color:${mc(margin)}">${Math.round(margin)}%</strong></div>` : ''}
+  `;
+}
+
+async function saveAssignments() {
+  if (!currentAssignJobId) return;
+  const assignments = Object.entries(tempAssignments)
+    .filter(([_, hrs]) => hrs > 0)
+    .map(([empId, hrs]) => {
+      const emp = S.employees.find(e => e.id === empId);
+      return { empId, empName: emp ? emp.name : empId, hrs };
+    });
+  await db.collection('jobs').doc(currentAssignJobId).update({ assignments });
+  closeAssignModal();
+}
+
+// Close modal on overlay click
+document.getElementById('assign-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAssignModal();
+});
+
+/* ════ SECTOR ANALYSIS ════ */
+function getSectorData() {
+  const sectors = {};
+  S.jobs.forEach(j => {
+    const sec = j.sector||'Diğer';
+    if (!sectors[sec]) sectors[sec]={name:sec,rev:0,cost:0,jobs:0};
+    sectors[sec].rev += j.revEUR;
+    const jCost = getJobCost(j);
+    sectors[sec].cost += jCost !== null ? jCost : j.hrs * hrRateEUR(j.dept);
+    sectors[sec].jobs++;
+  });
+  return Object.values(sectors).map(s=>({
+    ...s, profit:s.rev-s.cost,
+    margin: s.rev>0?((s.rev-s.cost)/s.rev)*100:0
+  })).sort((a,b)=>b.profit-a.profit);
+}
+
+/* ════ DASHBOARD ════ */
+function renderDash() {
+  ['sw','cr','pm'].forEach(d => {
+    const cap=dCap(d),used=dUsed(d),free=Math.max(0,cap-used);
+    const p=pct(used,cap), emp=S.employees.filter(e=>e.dept===d).length, jobs=S.jobs.filter(j=>j.dept===d).length;
+    const dRev=S.jobs.filter(j=>j.dept===d).reduce((s,j)=>s+j.revEUR,0);
+    const dCostE=dCostEUR(d);
+    const dProfit=dRev-dCostE;
+    document.getElementById(`d-${d}-e`).textContent=emp+' kişi';
+    document.getElementById(`d-${d}-p`).textContent=p+'%';
+    document.getElementById(`d-${d}-b`).style.width=p+'%';
+    document.getElementById(`d-${d}-b`).className='prog-fill '+fCls(p,d);
+    document.getElementById(`d-${d}-i`).textContent=`${fmtN(free)} sa boşta · ${jobs} iş`;
+    document.getElementById(`d-${d}-rev`).textContent=fmtE(dRev);
+    document.getElementById(`d-${d}-profit`).textContent=fmtE(dProfit);
+    document.getElementById(`d-${d}-profit`).style.color=dProfit>=0?'var(--green)':'var(--red)';
+  });
+
+  const tCap=['sw','cr','pm'].reduce((s,d)=>s+dCap(d),0);
+  const tUsed=['sw','cr','pm'].reduce((s,d)=>s+dUsed(d),0);
+  const tRev=S.jobs.reduce((s,j)=>s+j.revEUR,0);
+  const tCost=['sw','cr','pm'].reduce((s,d)=>s+dCostEUR(d),0);
+  const profit=tRev-tCost;
+  document.getElementById('d-tcap').textContent=fmtN(tCap);
+  document.getElementById('d-ucap').textContent=fmtN(tUsed);
+  document.getElementById('d-rev').textContent=fmtE(tRev);
+  const pe=document.getElementById('d-profit');
+  pe.textContent=fmtE(profit);
+  pe.style.color=profit>=0?'var(--green)':'var(--red)';
+
+  // Best / worst dept
+  const deptStats = ['sw','cr','pm'].map(d=>({
+    d, rev:S.jobs.filter(j=>j.dept===d).reduce((s,j)=>s+j.revEUR,0),
+    profit: S.jobs.filter(j=>j.dept===d).reduce((s,j)=>s+j.revEUR,0) - dCostEUR(d)
+  })).sort((a,b)=>b.profit-a.profit);
+
+  const bestDept=deptStats[0], worstDept=deptStats[deptStats.length-1];
+  document.getElementById('d-best-dept').innerHTML = bestDept && bestDept.rev>0
+    ? `<div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--green-s);border-radius:var(--rsm);margin-bottom:10px">
+        <span style="font-size:1.2rem">🏆</span>
+        <div><div style="font-weight:700;font-size:.84rem">${DEPTS[bestDept.d]}</div>
+        <div style="font-size:.72rem;color:var(--text2)">${fmtE(bestDept.rev)} gelir · ${fmtE(bestDept.profit)} kâr</div></div>
+       </div>` : '';
+  document.getElementById('d-worst-dept').innerHTML = worstDept && worstDept.profit < 0
+    ? `<div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--red-s);border-radius:var(--rsm);margin-bottom:10px">
+        <span style="font-size:1.2rem">⚠️</span>
+        <div><div style="font-weight:700;font-size:.84rem">${DEPTS[worstDept.d]}</div>
+        <div style="font-size:.72rem;color:var(--text2)">${fmtE(worstDept.rev)} gelir · ${fmtE(worstDept.profit)} kâr</div></div>
+       </div>` : '';
+
+  // Sectors
+  const sectors = getSectorData();
+  const pos = sectors.filter(s=>s.margin>20);
+  const neg = sectors.filter(s=>s.margin<=20);
+  const sectorIcons = {'Turizm & Otel':'🏨','E-ticaret':'🛒','İnşaat & GYO':'🏗','Tekstil & Moda':'👗','Gıda & İçecek':'🍽','Sağlık':'🏥','Eğitim':'📚','Teknoloji':'💻','Otomotiv':'🚗','Perakende':'🏪','Finans':'🏦','Diğer':'📌'};
+
+  document.getElementById('d-sectors-pos').innerHTML = pos.length
+    ? pos.map(s=>`<div class="sec-card">
+        <div class="sec-icon" style="background:var(--green-s)">${sectorIcons[s.name]||'📌'}</div>
+        <div class="sec-info"><div class="sec-name">${s.name}</div><div class="sec-sub">${s.jobs} müşteri · ${fmtE(s.rev)} gelir</div></div>
+        <div><div class="sec-val" style="color:var(--green)">${fmtE(s.profit)}</div><div class="sec-pct">%${Math.round(s.margin)} marj</div></div>
+      </div>`).join('')
+    : '<div style="font-size:.78rem;color:var(--text3);padding:8px 0">Veri yok</div>';
+
+  document.getElementById('d-sectors-neg').innerHTML = neg.length
+    ? neg.map(s=>`<div class="sec-card">
+        <div class="sec-icon" style="background:${s.margin<0?'var(--red-s)':'var(--amber-s)'}">${sectorIcons[s.name]||'📌'}</div>
+        <div class="sec-info"><div class="sec-name">${s.name}</div><div class="sec-sub">${s.jobs} müşteri · ${fmtE(s.rev)} gelir</div></div>
+        <div><div class="sec-val" style="color:${s.margin<0?'var(--red)':'var(--amber)'}">${fmtE(s.profit)}</div><div class="sec-pct">%${Math.round(s.margin)} marj</div></div>
+      </div>`).join('')
+    : '<div style="font-size:.78rem;color:var(--text3);padding:8px 0">Tüm sektörler kârlı 🎉</div>';
+
+  // Quick rec
+  const rec=document.getElementById('d-rec');
+  if (!S.services.length||!S.employees.length) { rec.textContent='Veri girişi yapınca otomatik öneri görünür.'; return; }
+  const opps=getOpps();
+  if (!opps.length) { rec.innerHTML='<span style="color:var(--amber)">Tüm departmanlar kapasitede.</span>'; return; }
+  const t=opps[0];
+  rec.innerHTML=`<strong>${t.name}</strong> <span class="badge ${DB[t.dept]}" style="margin:0 4px">${DEPTS[t.dept]}</span> — <strong>${t.slots} yeni müşteri</strong> kapasiten var, her biri <strong style="color:var(--green)">${fmtE(t.profitEach)}/ay</strong> katkı marjı.`;
+}
+
+/* ════ OPPORTUNITIES ════ */
+function getOpps() {
+  return S.services.map(svc => {
+    const cap=dCap(svc.dept), used=dUsed(svc.dept), free=Math.max(0,cap-used);
+    if(free<=0) return null;
+    const hrE=hrRateEUR(svc.dept), cost=svc.hours*hrE, profit=svc.priceEUR-cost;
+    const margin=svc.priceEUR>0?(profit/svc.priceEUR)*100:0;
+    const slots=svc.hours>0?Math.floor(free/svc.hours):0;
+    if(slots<=0) return null;
+    const score=(profit/svc.hours)*free;
+    return{...svc,free,cost,profit,margin,slots,profitEach:profit,score,sl:margin>55?'Yüksek':margin>20?'Orta':'Düşük'};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
+}
+
+/* ════ TIME REDUCTION SUGGESTIONS ════ */
+function getTimeReductions() {
+  const suggestions = [];
+  S.jobs.forEach(j => {
+    const svc = S.services.find(s=>s.id===j.svcId);
+    if (!svc) return;
+    if (j.hrs <= svc.hours) return; // already at or under standard
+    const excess = j.hrs - svc.hours;
+    const hrE = hrRateEUR(j.dept);
+    const currentCost = j.hrs * hrE;
+    const optimizedCost = svc.hours * hrE;
+    const profitGain = currentCost - optimizedCost; // savings
+    const currentMargin = j.revEUR>0?((j.revEUR-currentCost)/j.revEUR)*100:0;
+    const optimizedMargin = j.revEUR>0?((j.revEUR-optimizedCost)/j.revEUR)*100:0;
+    const freedHours = excess;
+    suggestions.push({
+      client:j.client, sector:j.sector, svcName:j.svcName, dept:j.dept,
+      currentHrs:j.hrs, standardHrs:svc.hours, excessHrs:excess,
+      profitGain, freedHours, currentMargin, optimizedMargin,
+      score: profitGain * 12 // annualized
+    });
+  });
+  return suggestions.sort((a,b)=>b.score-a.score);
+}
+
+/* ════ BLEND PACKAGES ════ */
+function getBlendOpps() {
+  const pairs = [];
+  for (let i=0; i<S.services.length; i++) {
+    for (let j=i+1; j<S.services.length; j++) {
+      const s1=S.services[i], s2=S.services[j];
+      const free1=Math.max(0,dCap(s1.dept)-dUsed(s1.dept));
+      const free2=Math.max(0,dCap(s2.dept)-dUsed(s2.dept));
+      if(free1<s1.hours||free2<s2.hours) continue;
+      const slots=Math.min(Math.floor(free1/s1.hours),Math.floor(free2/s2.hours));
+      if(slots<=0) continue;
+      const totalPrice=s1.priceEUR+s2.priceEUR;
+      const discPrice=totalPrice*0.95; // 5% package discount
+      const costEUR=(s1.hours*hrRateEUR(s1.dept))+(s2.hours*hrRateEUR(s2.dept));
+      const profit=discPrice-costEUR;
+      const margin=discPrice>0?(profit/discPrice)*100:0;
+      const score=profit*slots;
+      if(profit<=0) continue;
+      pairs.push({type:'pair',services:[s1,s2],totalPrice,discPrice,costEUR,profit,margin,slots,score,discount:totalPrice-discPrice});
+    }
+  }
+  // Upsell: existing clients with additional services
+  const upsells = [];
+  const clientMap = {};
+  S.jobs.forEach(j=>{
+    if(!clientMap[j.client]) clientMap[j.client]={client:j.client,sector:j.sector,svcIds:[]};
+    clientMap[j.client].svcIds.push(j.svcId);
+  });
+  Object.values(clientMap).forEach(cm=>{
+    S.services.forEach(svc=>{
+      if(cm.svcIds.includes(svc.id)) return;
+      const free=Math.max(0,dCap(svc.dept)-dUsed(svc.dept));
+      if(free<svc.hours) return;
+      const hrE=hrRateEUR(svc.dept);
+      const cost=svc.hours*hrE, profit=svc.priceEUR-cost;
+      const margin=svc.priceEUR>0?(profit/svc.priceEUR)*100:0;
+      if(profit<=0) return;
+      upsells.push({type:'upsell',client:cm.client,sector:cm.sector,service:svc,profit,margin,score:profit*12});
+    });
+  });
+  return {
+    pairs: pairs.sort((a,b)=>b.score-a.score).slice(0,8),
+    upsells: upsells.sort((a,b)=>b.score-a.score).slice(0,8)
+  };
+}
+
+/* ════ ANALYSIS: TEKIL ════ */
+function renderAnTekil() {
+  const el=document.getElementById('an-tekil');
+  if (!S.employees.length||!S.services.length) {
+    el.innerHTML='<div class="card"><div class="empty"><div class="ei">📈</div><p>İş gücü ve hizmet verisi gerekiyor.</p></div></div>'; return;
+  }
+  const opps=getOpps(), reductions=getTimeReductions();
+  const maxS=opps.length?opps[0].score:1;
+  const topRec=opps.length
+    ?`<div class="hbox green"><div class="ht">🎯 Öncelikli Yeni Müşteri Fırsatı</div><div class="hb">
+      <span class="badge ${DB[opps[0].dept]}" style="margin-right:5px">${DEPTS[opps[0].dept]}</span>
+      departmanında <strong>${fmtN(opps[0].free)} sa</strong> boş. <strong>${opps[0].name}</strong> için <strong>${opps[0].slots} yeni müşteri</strong> kapasitesi var.
+      Her biri aylık <strong>${fmtE(opps[0].profitEach)}</strong> katkı → yıllık potansiyel <strong>${fmtE(opps[0].profitEach*opps[0].slots*12)}</strong>.
+     </div></div>`
+    :`<div class="hbox amber"><div class="ht">⚠ Tüm departmanlar kapasitede</div><div class="hb">Yeni iş almak için çalışan eklemeyi değerlendir.</div></div>`;
+
+  const oppCards=opps.map((o,i)=>{
+    const sw=(o.score/maxS)*100;
+    const ac=i===0?'var(--green)':i===1?'var(--sw)':i===2?'var(--cr)':'var(--border2)';
+    return `<div class="ocard">
+      <div class="ocard-accent" style="background:${ac}"></div>
+      <div class="ocard-rank">${['#1','#2','#3'][i]||'#'+(i+1)}</div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px">
+        <div class="ocard-name">${o.name}</div>
+        <span class="badge ${DB[o.dept]}">${DEPTS[o.dept]}</span>
+        <span class="badge ${mcBadge(o.margin)}">${Math.round(o.margin)}% marj</span>
+      </div>
+      <div style="font-size:.76rem;color:var(--text2)">Kapasite: <strong style="color:var(--text)">${o.slots} yeni müşteri alınabilir</strong></div>
+      <div class="om-grid">
+        <div class="om-item"><div class="om-l">Fiyat/Ay</div><div class="om-v" style="color:var(--sw)">${fmtE(o.priceEUR)}</div></div>
+        <div class="om-item"><div class="om-l">Kâr/Müşteri</div><div class="om-v" style="color:var(--green)">${fmtE(o.profitEach)}</div></div>
+        <div class="om-item"><div class="om-l">Toplam Potansiyel</div><div class="om-v" style="color:var(--green)">${fmtE(o.profitEach*o.slots)}</div></div>
+        <div class="om-item"><div class="om-l">Boş Kapasite</div><div class="om-v">${fmtN(o.free)} sa</div></div>
+      </div>
+      <div class="sbar"><div class="sfill" style="width:${sw}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const redCards = reductions.length ? reductions.map(r=>`
+    <div class="ocard" style="border-color:var(--amber-b)">
+      <div class="ocard-accent" style="background:var(--amber)"></div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+        <div class="ocard-name">⚡ ${r.client}</div>
+        <span class="badge bneu" style="font-size:.6rem">${r.sector||''}</span>
+        <span class="badge ${DB[r.dept]}">${DEPTS[r.dept]}</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px">
+        <strong>${r.svcName}</strong> için standart süre <strong>${r.standardHrs} sa</strong> — şu an <strong style="color:var(--amber)">${r.currentHrs} sa</strong> ayrılıyor (<strong>+${r.excessHrs} sa fazla</strong>)
+      </div>
+      <div class="om-grid">
+        <div class="om-item"><div class="om-l">Kazanılacak Kâr/Ay</div><div class="om-v" style="color:var(--green)">${fmtE(r.profitGain)}</div></div>
+        <div class="om-item"><div class="om-l">Kazanılacak Kâr/Yıl</div><div class="om-v" style="color:var(--green)">${fmtE(r.profitGain*12)}</div></div>
+        <div class="om-item"><div class="om-l">Serbest Kalacak Saat</div><div class="om-v">${r.freedHours} sa/ay</div></div>
+        <div class="om-item"><div class="om-l">Marj: Şu An → Hedef</div><div class="om-v">${Math.round(r.currentMargin)}% → <span style="color:var(--green)">${Math.round(r.optimizedMargin)}%</span></div></div>
+      </div>
+    </div>`).join('')
+    : '<div class="empty"><div class="ei">✅</div><p>Tüm işler standart sürede yürütülüyor</p></div>';
+
+  // Dept capacity
+  const dCards=['sw','cr','pm'].map(d=>{
+    const cap=dCap(d),used=dUsed(d),free=Math.max(0,cap-used),p=pct(used,cap);
+    const st=p>90?'<span class="badge bfull">Dolu</span>':p>60?'<span class="badge bwarn">Orta</span>':'<span class="badge bok">Boşta</span>';
+    return `<div class="dept-card" style="margin-bottom:0">
+      <div class="dept-head"><div class="dept-name"><span class="dd ${d}"></span>${DEPTS[d]}</div>${st}</div>
+      <div class="prog-meta"><span>${fmtN(used)}/${fmtN(cap)} sa</span><span>${p}%</span></div>
+      <div class="prog-track"><div class="prog-fill ${fCls(p,d)}" style="width:${p}%"></div></div>
+      <div class="prog-sub">${fmtN(free)} sa boş · ${S.employees.filter(e=>e.dept===d).length} çalışan</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    ${topRec}
+    <div class="card"><div class="card-title">Departman Kapasite Durumu</div><div class="g3">${dCards}</div></div>
+    <div class="card"><div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">Yeni Müşteri Fırsatları</div><div style="font-size:.7rem;color:var(--text3)">Fırsat Skoru = Sa Başı Kâr × Boş Kapasite</div></div>${oppCards||'<div class="empty"><p>Boş kapasite yok</p></div>'}</div>
+    <div class="card"><div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">⚡ Süre Optimizasyonu</div><div style="font-size:.7rem;color:var(--text3)">Standart süreden fazla harcanan işlerde kârlılık artış potansiyeli</div></div>${redCards}</div>`;
+}
+
+/* ════ ANALYSIS: BLEND ════ */
+function renderAnBlend() {
+  const el=document.getElementById('an-blend');
+  if (!S.employees.length||!S.services.length) {
+    el.innerHTML='<div class="card"><div class="empty"><div class="ei">📦</div><p>Veri girişi gerekiyor.</p></div></div>'; return;
+  }
+  const {pairs, upsells} = getBlendOpps();
+
+  const pairCards = pairs.length ? pairs.map((p,i)=>{
+    const ac=i===0?'var(--green)':i===1?'var(--sw)':'var(--border2)';
+    return `<div class="ocard">
+      <div class="ocard-accent" style="background:${ac}"></div>
+      <div class="ocard-rank">#${i+1}</div>
+      <div class="ocard-name" style="margin-bottom:6px">📦 ${p.services[0].name} + ${p.services[1].name}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <span class="badge ${DB[p.services[0].dept]}">${DEPTS[p.services[0].dept]}</span>
+        <span class="badge ${DB[p.services[1].dept]}">${DEPTS[p.services[1].dept]}</span>
+        <span class="badge bwarn">%5 paket indirimi</span>
+      </div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:2px">
+        Standart fiyat: <span style="text-decoration:line-through;color:var(--text3)">${fmtE(p.totalPrice)}</span>
+        → <strong style="color:var(--sw)">${fmtE(p.discPrice)}</strong> paket fiyatı
+      </div>
+      <div class="om-grid">
+        <div class="om-item"><div class="om-l">Kâr / Paket</div><div class="om-v" style="color:var(--green)">${fmtE(p.profit)}</div></div>
+        <div class="om-item"><div class="om-l">Marj</div><div class="om-v" style="color:${mc(p.margin)}">${Math.round(p.margin)}%</div></div>
+        <div class="om-item"><div class="om-l">Maks. Paket Sayısı</div><div class="om-v">${p.slots} müşteri</div></div>
+        <div class="om-item"><div class="om-l">Toplam Potansiyel</div><div class="om-v" style="color:var(--green)">${fmtE(p.profit*p.slots)}</div></div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="ei">📦</div><p>Paket için yeterli boş kapasite bulunamadı</p></div>';
+
+  const upsellCards = upsells.length ? upsells.map((u,i)=>`
+    <div class="ocard" style="border-color:var(--sw-b)">
+      <div class="ocard-accent" style="background:var(--sw)"></div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+        <div class="ocard-name">🔄 ${u.client}</div>
+        <span class="badge bneu" style="font-size:.6rem">${u.sector||''}</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">
+        Mevcut müşteriye ek hizmet önerisi: <strong>${u.service.name}</strong>
+        <span class="badge ${DB[u.service.dept]}" style="margin-left:5px">${DEPTS[u.service.dept]}</span>
+      </div>
+      <div class="om-grid">
+        <div class="om-item"><div class="om-l">Fiyat</div><div class="om-v" style="color:var(--sw)">${fmtE(u.service.priceEUR)}</div></div>
+        <div class="om-item"><div class="om-l">Katkı Marjı</div><div class="om-v" style="color:${mc(u.margin)}">${Math.round(u.margin)}%</div></div>
+        <div class="om-item"><div class="om-l">Aylık Kâr</div><div class="om-v" style="color:var(--green)">${fmtE(u.profit)}</div></div>
+        <div class="om-item"><div class="om-l">Yıllık Kâr</div><div class="om-v" style="color:var(--green)">${fmtE(u.profit*12)}</div></div>
+      </div>
+    </div>`).join('')
+    : '<div class="empty"><div class="ei">🔄</div><p>Tüm müşteriler mevcut hizmetlere sahip veya kapasite yok</p></div>';
+
+  // Sector blend: which sectors have growth potential?
+  const sectorData = getSectorData();
+  const sectorOpp = sectorData.filter(s=>s.margin>30).map(s=>`
+    <div class="ocard" style="border-color:var(--pm-b)">
+      <div class="ocard-accent" style="background:var(--pm)"></div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+        <div class="ocard-name">🌍 ${s.name} Sektörü</div>
+        <span class="badge bok">${Math.round(s.margin)}% marj</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">${s.jobs} aktif müşteri · ${fmtE(s.rev)} toplam gelir · ${fmtE(s.profit)} kâr</div>
+      <div class="hbox green" style="margin:0;padding:10px 12px">
+        <div class="hb">Bu sektörde güçlü marjınız var. Benzer sektördeki yeni müşterilere öncelik verin — öğrenme eğrisi avantajı satış döngüsünü kısaltır.</div>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML=`
+    <div class="card"><div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">📦 Çapraz Hizmet Paket Önerileri</div><div style="font-size:.7rem;color:var(--text3)">İki hizmeti birlikte satarak %5 indirimli paket — müşteri kazanır, marjın korunur</div></div>${pairCards}</div>
+    <div class="card"><div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">🔄 Mevcut Müşteriye Ek Hizmet (Upsell)</div><div style="font-size:.7rem;color:var(--text3)">Mevcut müşterilere henüz sunulmayan hizmetler</div></div>${upsellCards}</div>
+    ${sectorOpp ? `<div class="card"><div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">🌍 Sektör Bazlı Büyüme Önerileri</div></div>${sectorOpp}</div>` : ''}`;
+}
+
+/* ════ PROFITABILITY ════ */
+function renderPr() {
+  const el=document.getElementById('pr-root');
+  if(!S.services.length){el.innerHTML='<div class="card"><div class="empty"><div class="ei">💰</div><p>Hizmet verisi gerekiyor.</p></div></div>';return;}
+  const hasR=S.employees.length>0;
+  const tRev=S.jobs.reduce((s,j)=>s+j.revEUR,0);
+  const tCost=['sw','cr','pm'].reduce((s,d)=>s+dCostEUR(d),0);
+  const net=tRev-tCost; const nm=tRev>0?(net/tRev)*100:0;
+
+  const sdata=S.services.map(s=>{
+    const hrE=hrRateEUR(s.dept), cost=s.hours*hrE, profit=s.priceEUR-cost;
+    const margin=s.priceEUR>0?(profit/s.priceEUR)*100:0;
+    const expProfit=s.priceEUR/3;
+    const jobs=S.jobs.filter(j=>j.svcId===s.id);
+    const aRev=jobs.reduce((x,j)=>x+j.revEUR,0);
+    return{...s,cost,profit,expProfit,margin,jobCount:jobs.length,aRev};
+  }).sort((a,b)=>b.margin-a.margin);
+  const maxM=Math.max(...sdata.map(s=>s.margin),100);
+
+  const rows=sdata.map((s,i)=>{
+    const mC=hasR?mc(s.margin):'var(--text3)';
+    const bw=hasR?Math.max(0,(s.margin/maxM)*100):0;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:.68rem;font-weight:700;color:var(--text3);width:18px">${i+1}</span>
+        <div><strong>${s.name}</strong><br><span class="badge ${DB[s.dept]}" style="margin-top:3px">${DEPTS[s.dept]}</span></div>
+      </div></td>
+      <td style="font-weight:600">${fmtE(s.priceEUR)}</td>
+      <td style="color:var(--sw)">${fmtE(s.expProfit)}</td>
+      <td>${hasR?fmtE(s.cost):'—'}</td>
+      <td style="color:var(--green);font-weight:600">${hasR?fmtE(s.profit):'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="prog-track" style="width:52px"><div style="height:100%;width:${bw}%;background:${mC};border-radius:99px"></div></div>
+        <span style="color:${mC};font-weight:700">${hasR?Math.round(s.margin)+'%':'—'}</span>
+      </div></td>
+      <td style="color:var(--text2);text-align:center">${s.jobCount}</td>
+      <td style="color:var(--sw);font-weight:600">${s.jobCount>0?fmtE(s.aRev):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Sector table
+  const sectors=getSectorData();
+  const secRows=sectors.map(s=>`<tr>
+    <td><strong>${s.name}</strong></td>
+    <td>${s.jobs}</td>
+    <td style="color:var(--green);font-weight:600">${fmtE(s.rev)}</td>
+    <td>${fmtE(s.cost)}</td>
+    <td style="color:${mc(s.margin)};font-weight:700">${fmtE(s.profit)}</td>
+    <td><span class="badge ${mcBadge(s.margin)}">${Math.round(s.margin)}%</span></td>
+  </tr>`).join('');
+
+  el.innerHTML=`
+    <div class="g3" style="margin-bottom:14px">
+      <div class="stat"><div class="sl">Aylık Gelir</div><div class="sv" style="color:var(--green)">${fmtE(tRev)}</div><div class="ss">${S.jobs.length} aktif iş</div></div>
+      <div class="stat"><div class="sl">İşgücü Maliyeti</div><div class="sv">${fmtE(tCost)}</div><div class="ss">${S.employees.length} çalışan (×1,3)</div></div>
+      <div class="stat"><div class="sl">Net Kâr / Marj</div>
+        <div class="sv" style="color:${net>=0?'var(--green)':'var(--red)'}">${fmtE(net)}</div>
+        <div class="ss" style="color:${net>=0?'var(--green)':'var(--red)'}">${hasR&&tRev>0?Math.round(nm)+'%':'—'}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:12px"><div class="card-title" style="margin-bottom:2px">Hizmet Kârlılık Sıralaması</div>
+        <div style="font-size:.68rem;color:var(--text3)">Beklenen kâr = fiyatın 1/3'ü · Gerçekleşen kâr = fiyat − (saat × sa başı EUR maliyet)</div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Hizmet</th><th>Fiyat/Ay</th><th>Bekl. Kâr</th><th>Maliyet*</th><th>Gerç. Kâr*</th><th>Marj %</th><th>Müşteri</th><th>Aktif Gelir</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Sektör Kârlılık Tablosu</div>
+      <div class="tw"><table>
+        <thead><tr><th>Sektör</th><th>Müşteri</th><th>Gelir</th><th>Maliyet</th><th>Kâr</th><th>Marj</th></tr></thead>
+        <tbody>${secRows||'<tr><td colspan="6"><div class="empty"><p>İşlere sektör atandığında burada görünür</p></div></td></tr>'}</tbody>
+      </table></div>
+    </div>
+    ${!hasR?'<div class="hbox amber"><div class="ht">⚠ Maliyet verisi eksik</div><div class="hb">Kâr marjı hesaplaması için çalışan maliyetlerini gir.</div></div>':''}`;
+}
+
+/* ════ AI ANALYSIS ════ */
+const AI_PROMPTS = {
+  profitability: {
+    title: '📊 Kârlılık Analizi',
+    instruction: `Sen bir dijital ajans danışmanısın. Aşağıdaki ajans verilerini analiz et ve kârlılık açısından detaylı bir yorum yap. Türkçe yanıt ver. Şunları ele al:
+1. En kârlı ve en az kârlı hizmetler — neden?
+2. Sektör bazında kârlılık dağılımı
+3. Marj düşük olan hizmetlerde ne yapılabilir?
+4. Personel maliyet yapısı ve EUR/TRY etkisi
+Somut, uygulanabilir önerilerde bulun. Madde madde yaz, başlıklar kullan.`
+  },
+  optimization: {
+    title: '🎯 Büyüme Fırsatları',
+    instruction: `Sen bir dijital ajans büyüme danışmanısın. Aşağıdaki verileri inceleyerek büyüme fırsatlarını belirle. Türkçe yanıt ver. Şunları ele al:
+1. Boş kapasitede en yüksek katkı marjı sağlayacak hizmetler
+2. Hangi sektörlerde yeni müşteri hedeflenmeli?
+3. Mevcut müşterilere upsell/cross-sell fırsatları
+4. Paket hizmet önerileri
+Somut rakamlar ve öncelik sıralaması ile yanıt ver.`
+  },
+  workforce: {
+    title: '👥 Ekip & Kapasite Analizi',
+    instruction: `Sen bir ajans operasyon danışmanısın. Aşağıdaki personel ve kapasite verilerini analiz et. Türkçe yanıt ver. Şunları ele al:
+1. Departman bazında doluluk oranları ve risk değerlendirmesi
+2. Personel maliyet verimliliği (EUR bazında)
+3. Kıdem dağılımı uygun mu?
+4. Hangi departmana işe alım gerekebilir?
+5. Aşırı doluluk veya atıl kapasite var mı?
+Somut önerilerle yanıt ver.`
+  },
+  strategy: {
+    title: '🧭 Strateji Önerileri',
+    instruction: `Sen deneyimli bir dijital ajans strateji danışmanısın. Aşağıdaki tüm ajans verilerini bütünsel olarak değerlendir. Türkçe yanıt ver. Şunları ele al:
+1. Ajansın genel finansal sağlığı
+2. En kritik 3 risk
+3. En kritik 3 fırsat
+4. Önümüzdeki 3 ayda yapılması gereken 5 somut aksiyon
+5. Uzun vadeli pozisyonlama önerisi
+Öncelik sırasına göre, net ve uygulanabilir bir strateji sun.`
+  }
+};
+
+function buildDataSummary() {
+  const tRev = S.jobs.reduce((s,j)=>s+j.revEUR,0);
+  const tCost = ['sw','cr','pm'].reduce((s,d)=>s+dCostEUR(d),0);
+  const net = tRev - tCost;
+
+  const empSummary = S.employees.map(e => {
+    const hrCostEUR = e.cap > 0 ? (e.costTL * 1.3) / S.eurTry / e.cap : 0;
+    return `- ${e.name} | ${DEPTS[e.dept]} | ${seniorityName(e.seniorityId)} | ${e.cap}sa/ay | ₺${e.costTL} brüt (×1.3 gerçek) | €${hrCostEUR.toFixed(2)}/sa`;
+  }).join('\n');
+
+  const svcSummary = S.services.map(s => {
+    const hrE = hrRateEUR(s.dept);
+    const cost = s.hours * hrE;
+    const profit = s.priceEUR - cost;
+    const margin = s.priceEUR > 0 ? (profit/s.priceEUR*100).toFixed(0) : '?';
+    return `- ${s.name} | ${DEPTS[s.dept]} | €${s.priceEUR}/ay | ${s.hours}sa | Marj: %${margin}`;
+  }).join('\n');
+
+  const jobSummary = S.jobs.map(j => {
+    const cost = getJobCost(j);
+    const profit = cost !== null ? j.revEUR - cost : null;
+    const margin = profit !== null && j.revEUR > 0 ? (profit/j.revEUR*100).toFixed(0) : '?';
+    const assigns = (j.assignments||[]).map(a=>a.empName+' '+a.hrs+'sa').join(', ');
+    return `- ${j.client} | ${j.sector} | ${j.svcName} | €${j.revEUR}/ay | ${j.hrs}sa | Marj: %${margin} | Personel: ${assigns||'atanmadı'}`;
+  }).join('\n');
+
+  const sectorData = getSectorData();
+  const secSummary = sectorData.map(s =>
+    `- ${s.name}: ${s.jobs} müşteri | €${s.rev.toFixed(0)} gelir | €${s.profit.toFixed(0)} kâr | %${s.margin.toFixed(0)} marj`
+  ).join('\n');
+
+  const deptSummary = ['sw','cr','pm'].map(d => {
+    const cap=dCap(d), used=dUsed(d), free=Math.max(0,cap-used);
+    const rev=S.jobs.filter(j=>j.dept===d).reduce((s,j)=>s+j.revEUR,0);
+    const costE=dCostEUR(d);
+    return `- ${DEPTS[d]}: ${S.employees.filter(e=>e.dept===d).length} çalışan | %${pct(used,cap)} dolu | €${rev.toFixed(0)} gelir | €${costE.toFixed(0)} maliyet | €${(rev-costE).toFixed(0)} kâr`;
+  }).join('\n');
+
+  return `== AJANS VERİLERİ ==
+
+EUR/TRY Kuru: ${S.eurTry.toFixed(2)}
+Aylık Toplam Gelir: €${tRev.toFixed(0)}
+Aylık İşgücü Maliyeti: €${tCost.toFixed(0)}
+Aylık Net Kâr: €${net.toFixed(0)}
+Net Marj: %${tRev > 0 ? (net/tRev*100).toFixed(0) : 0}
+
+PERSONEL (${S.employees.length} kişi):
+${empSummary || 'Henüz personel eklenmemiş'}
+
+HİZMETLER (${S.services.length} adet):
+${svcSummary || 'Henüz hizmet eklenmemiş'}
+
+AKTİF İŞLER (${S.jobs.length} müşteri):
+${jobSummary || 'Henüz iş eklenmemiş'}
+
+DEPARTMAN ÖZET:
+${deptSummary}
+
+SEKTÖR DAĞILIMI:
+${secSummary || 'Sektör verisi yok'}`;
+}
+
+async function runAI(type) {
+  const prompt = AI_PROMPTS[type];
+  if (!prompt) return;
+
+  // Show loading
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+
+  // Highlight active button
+  document.querySelectorAll('[id^="ai-btn-"]').forEach(b => b.style.borderColor = '');
+  const btn = document.getElementById('ai-btn-' + type);
+  if (btn) btn.style.borderColor = 'var(--sw)';
+
+  const dataSummary = buildDataSummary();
+
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: prompt.instruction,
+        userMessage: dataSummary
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    const text = data.text || 'Yanıt alınamadı.';
+
+    // Format text: bold headers, line breaks
+    const formatted = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^(\d+\.|[-•])/gm, '<br>$1')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>');
+
+    document.getElementById('ai-result-title').textContent = prompt.title;
+    document.getElementById('ai-result-body').innerHTML = formatted;
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+
+    // Scroll to result
+    document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(e) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-result-title').textContent = 'Hata';
+    document.getElementById('ai-result-body').innerHTML = "API'ye ulaşılamadı. İnternet bağlantınızı kontrol edin.";
+    document.getElementById('ai-result').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
